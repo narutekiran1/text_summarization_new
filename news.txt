@@ -1,0 +1,2 @@
+In a Unshielded twisted pair there is no metallic shield is present.it is less reliable than shielded twisted pair.the Unshielded twisted pair has low datarate near about 10Mbps
+The Unshielded twisted pair cable has less data security.the Unshielded twisted pair was invented by EIA.the Unshielded twisted pair has less cost as compare to shielded twisted pair
