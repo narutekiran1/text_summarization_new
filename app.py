@@ -1,123 +1,199 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file, g, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_file, g, jsonify, session
 import sqlite3
+import os
+import time 
 from predict import summarize
 from preprocing import get
 import requests
 from gtts import gTTS
-import os
 
 app = Flask(__name__)
+app.secret_key = "your_secret_key"  # Required for session management
 
-# Create database connection
+DATABASE = "database.db"
+
+# Function to create or reset the database
 def create_connection():
-    conn = sqlite3.connect('database.db')
+    if os.path.exists(DATABASE):
+        try:
+            conn = sqlite3.connect(DATABASE)
+            c = conn.cursor()
+            c.execute("PRAGMA integrity_check;")
+            result = c.fetchone()
+            if result[0] != "ok":
+                print("Database corruption detected! Resetting database...")
+                conn.close()
+                os.remove(DATABASE)  # Delete the corrupted database
+        except sqlite3.DatabaseError:
+            print("Database error detected. Resetting database...")
+            conn.close()
+            os.remove(DATABASE)  # Delete the corrupted database
+
+    # Create a fresh database
+    conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (id INTEGER PRIMARY KEY, username TEXT, password TEXT)''')
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL,
+                  password TEXT NOT NULL,
+                  role TEXT NOT NULL)''')
     conn.commit()
     conn.close()
 
-# Initialize the database on startup
+# Initialize the database
 create_connection()
 
-# Helper function to get a database connection from Flask's global object `g`
+# Helper function to get a database connection
 def get_db():
     if 'db' not in g:
-        g.db = sqlite3.connect('database.db')
+        g.db = sqlite3.connect(DATABASE)
     return g.db
 
-# Close the database connection after each request
+# Close database connection after each request
 @app.teardown_appcontext
 def close_db(e=None):
     db = g.pop('db', None)
     if db is not None:
         db.close()
 
-# Home route that fetches news data
-@app.route("/")
+# Home route (User must be logged in)
 @app.route("/")
 def home():
-    # Include specific Indian news sources you want to fetch articles from
-    URL = ("http://newsapi.org/v2/top-headlines?"
-           "country=in&"
-           "language=en&"
-           "sources=bbc-news,times-now,hindustan-times,the-times-of-india&"
-           "apiKey=2e0ec8c57e8e4da7aef1822653d387ec")
-    
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    return render_template("Home.html")
+
+# Fetch news and summarize using PageRank
+@app.route("/fetch-news")
+def fetch_news():
+    if "user" not in session:
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    NEWS_API_URL = "https://newsdata.io/api/1/latest?apikey=pub_72436a42dfa02a50ea760fffcbce61fb0179e&language=hi,mr"
+
     try:
-        r = requests.get(url=URL)
-        r.raise_for_status()  # Raise an error if there's a bad status code
-        data = r.json()
-        if "articles" not in data or not data["articles"]:
-            data = {"articles": []}  # Fallback to empty list if no articles are found
+        response = requests.get(NEWS_API_URL)
+        data = response.json()
+
+        if data.get("status") != "success" or "results" not in data:
+            return jsonify({"error": "Failed to fetch news"}), 500
+
+        articles = []
+        for article in data["results"][:30]:  # Get up to 30 articles
+            title = article.get("title", "No title available")
+            description = article.get("description", "No description available")
+            source = article.get("source_id", "Unknown Source")
+            url = article.get("link", "#")
+
+            # Apply PageRank summarization
+            summary_list = summarize(paragraph=description)
+            summary = " ".join(summary_list) if summary_list else description  # Fallback to original text if summarization fails
+
+            articles.append({
+                "title": title,
+                "summary": summary,  # Use summarized text
+                "source": source,
+                "url": url
+            })
+
+        return jsonify({"articles": articles})
+
     except requests.exceptions.RequestException as e:
         print(f"Error fetching news: {e}")
-        data = {"articles": []}  # Render with empty articles if there's an error
-    return render_template("Home.html", data=data)
+        return jsonify({"error": "Failed to connect to the news API"}), 500
 
-# Route for input text and summarization
+# Route for text summarization
 @app.route("/text", methods=["GET", "POST"])
 def predict():
-    return render_template("text.html")
+    if "user" not in session:
+        return redirect(url_for("login"))
 
+    return render_template("text.html")
 
 @app.route("/output", methods=["POST"])
 def output():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
     text = request.form.get("text")
     summary = summarize(paragraph=text)
     output = ' '.join(summary)
-    tts = gTTS(text=output, lang='en')  
+    tts = gTTS(text=output, lang='en')
     tts.save("output.mp3")
     os.system("start output.mp3")
 
     return render_template("text.html", output=output)
 
-# Route for generating audio from a summary of a news article
+# Generate audio from a news summary
 @app.route("/generate-audio", methods=["POST"])
 def generate_audio():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
     data = request.get_json()
     text = data.get("text")
 
     if not text:
         return jsonify({"error": "No text provided"}), 400
 
-    # Generate the audio from the text using gTTS
     tts = gTTS(text=text, lang='en')
     temp_file = "temp.mp3"
     tts.save(temp_file)
 
-    # Return the audio file as a response
     return send_file(temp_file, as_attachment=False)
 
+# Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    error = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        conn = sqlite3.connect('database.db')
+
+        conn = sqlite3.connect(DATABASE)
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
         user = c.fetchone()
         conn.close()
-        if user:
-            return redirect(url_for('home'))
-        else:
-            return "Invalid username or password"
-    return render_template("login.html")
 
+        if user:
+            session["user"] = username  # Store user session
+            return redirect(url_for("home"))
+        else:
+            error = "Invalid username or password. Try again."
+
+    return render_template("login.html", error=error)
+
+# Signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    error = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        conn = sqlite3.connect('database.db')
+        role = "user"  # Default role
+
+        conn = sqlite3.connect(DATABASE)
         c = conn.cursor()
-        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('login'))
-    return render_template("signup.html")
+        try:
+            c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (username, password, role))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            error = "Username already exists."
+        finally:
+            conn.close()
+
+        if not error:
+            return redirect(url_for("login"))
+
+    return render_template("signup.html", error=error)
+
+# Logout route
+@app.route("/logout")
+def logout():
+    session.pop("user", None)  # Remove user from session
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     app.run(debug=True)
-

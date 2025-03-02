@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 body {font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;}
 * {box-sizing: border-box;}
@@ -117,9 +118,7 @@ div {
   font-size: 16px;
   border-radius: 5px;
   transition: background-color 0.3s, color 0.3s;
-  
 }
-
 
 .topnav a:hover {
   background-color: teal; /* Darker grey for hover effect */
@@ -134,7 +133,6 @@ div {
 .topnav a.active:hover {
   background-color: #45a049; /* Darker green on hover */
 }
-
 
 .text-page {
   font-weight: bold;
@@ -166,85 +164,130 @@ div {
 
 /* News box with black shadow */
 .article-box {
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 20px;
-  margin: 20px auto;
-  max-width: 800px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 800px;
+    text-align: left; /* Align text to the left */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack elements vertically */
+    justify-content: center;
+    align-items: center;
+}
+
+.article-title {
+  margin-bottom: 10px; /* Add some space below the title */
   text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Black shadow */
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-/* Style for the article container */
-
-
-/* Style for the listen button */
-.listen-button, .pause-button {
-  padding: 8px 16px;
-  margin-top: 10px;
-  margin-right: 5px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.listen-button:hover, .pause-button:hover {
-  background-color: #0056b3;
-}
-
-/* Style for the pause button */
-.pause-button {
-  background-color: #dc3545;
-}
-
-.pause-button:hover {
-  background-color: #c82333;
-}
-
-.article-box:hover {
-  background-color: #f1f1f1;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5); /* Darker shadow on hover */
 }
 
 .article-title a {
-  color: #333;
-  font-size: 18px;
-  font-weight: 700;
+  font-weight: bold;
+  color: #333; /* Darker color for the title link */
   text-decoration: none;
+  text-align: center;
+}
+
+.article-title a:hover {
+  text-decoration: underline;
+  color: blue;
 }
 
 .article-description {
-  font-size: 14px;
-  color: #666;
+  margin-bottom: 10px; /* Add space between description and source */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-/* Small text for newspaper name */
 .article-source {
-  font-size: 12px;
-  color: #5c440f;
-  margin-top: 10px;
+  font-style: italic;
+  color: #777;
+  margin-bottom: 15px; /* Add space below the source */
 }
+
+.article-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 15px; /* Add some space below the image */
+    border-radius: 5px; /* Add rounded corners to the image */
+    object-fit: cover; /* or contain, depending on how you want to fill the space */
+}
+
+.button-container {
+    display: flex; /* Use flexbox to arrange buttons horizontally */
+    gap: 10px; /* Add some space between buttons */
+}
+
+.listen-button, .pause-button {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    width: 120px;
+    text-align: center;
+  }
+
+  .listen-button:hover {
+    background-color: #388E3C;
+  }
+
+  .pause-button {
+    background-color: #f44336;
+  }
+
+  .pause-button:hover {
+    background-color: #d32f2f;
+  }
 
 /* Scrollable news container */
 #news-container {
-  max-height: 500px; /* Set the height for the scrollable area */
-  overflow-y: auto; /* Enable vertical scroll */
-  margin: 20px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  background-color: #f4f4f4;
+    max-height: 700px; /* Increased height for more content */
+    overflow-y: auto;
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #f4f4f4;
+    border-radius: 5px; /* Add rounded corners to the container */
 }
+.logout-btn{
+  margin-left: auto;
+  margin-right: 6px;
+
+}
+
 
 </style>
 </head>
 <body>
 
   <div class="topnav">
+    <!-- Logout button added here -->
     <h3 style="color:red;">In Short news</h3>
+    <select id="categoryDropdown">
+      <option value="all">All</option>
+      <option value="politics">Politics</option>
+      <option value="crypto">Crypto</option>
+      <option value="technology">Technology</option>
+      <option value="other">Other</option>
+  </select>
+  <select id="languageDropdown">
+    <option value="en" selected>English</option>
+    <option value="hi">Hindi</option>
+    <option value="mr">Marathi</option>
+  </select>
+  
+    <a href="/login" class="logout-btn" style="border: 2px solid #f3c8c8; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: #333; font-weight: bold; display: inline-block; transition: background-color 0.3s ease, border-color 0.3s ease;"
+    onmouseover="this.style.backgroundColor='#f3c8c8'; this.style.borderColor='#f3c8c8'; this.style.color='#000';" 
+    onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#f3c8c8'; this.style.color='#333';">Logout</a>
     <a href="/text" class="topnav-check" style="border: 2px solid #f3c8c8; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: #333; font-weight: bold; display: inline-block; transition: background-color 0.3s ease, border-color 0.3s ease;"
     onmouseover="this.style.backgroundColor='#f3c8c8'; this.style.borderColor='#f3c8c8'; this.style.color='#000';" 
     onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#f3c8c8'; this.style.color='#333';">CHECK YOUR SUMMARY</a>
@@ -254,142 +297,104 @@ div {
   
 
   <script>
-   document.addEventListener('DOMContentLoaded', function() {
-  const apiKey = '2e0ec8c57e8e4da7aef1822653d387ec'; // Replace with your API key
-  const apiUrl = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}&pageSize=50`; // Fetch US news
-  const newsContainer = document.getElementById('news-container');
+    document.addEventListener('DOMContentLoaded', async function () {
+    const apiKey = 'pub_72436a42dfa02a50ea760fffcbce61fb0179e'; // API Key
+    const apiUrl = `https://newsdata.io/api/1/news?apikey=${apiKey}&language=en`;
+    const newsContainer = document.getElementById('news-container');
+    let currentAudio = null;
+    let articlesDisplayed = 0;
+    let nextPage = null;
 
-  fetch(apiUrl)
-    .then(response => response.json())
-    .then(data => {
-      if (data.articles && data.articles.length > 0) {
-        let displayedArticles = 0;
+    async function fetchNews() {
+        while (articlesDisplayed < 30) {  
+            let fetchUrl = apiUrl;
+            if (nextPage) fetchUrl += `&page=${nextPage}`;
 
-        data.articles.forEach((article, index) => {
-          if (article.description && displayedArticles < 50) {
-            // Skip the article if any part contains '[Removed]'
-            if (article.title.includes('[Removed]') || 
-                article.description.includes('[Removed]') || 
-                (article.source && article.source.name.includes('[Removed]'))) {
-              return;
+            try {
+                const response = await fetch(fetchUrl);
+                const data = await response.json();
+                console.log("API Response:", data);
+
+                if (data.status === "success" && data.results.length > 0) {
+                    // Save the data to localStorage
+                    localStorage.setItem('cachedNews', JSON.stringify(data.results));
+
+                    data.results.forEach(article => {
+                        if (articlesDisplayed >= 30) return;
+                        if (article.title && article.description) {
+                            article.description = summarizeText(article.description); 
+                            addArticleToUI(article);
+                            articlesDisplayed++;
+                        }
+                    });
+
+                    if (data.nextPage) {
+                        nextPage = data.nextPage;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            } catch (error) {
+                console.error("Error fetching news:", error);
+                showCachedNews(); // Show stored news if API fails
+                break;
             }
-
-            const articleBox = document.createElement('div');
-            articleBox.className = 'article-box';
-
-            const articleTitle = document.createElement('p');
-            articleTitle.className = 'article-title';
-
-            const titleLink = document.createElement('a');
-            titleLink.href = article.url;
-            titleLink.target = '_blank';
-            
-            // Check if title is available
-            titleLink.textContent = article.title ? article.title : 'No title available';
-            articleTitle.appendChild(titleLink);
-
-            const articleDescription = document.createElement('p');
-            articleDescription.className = 'article-description';
-            
-            // Check if description is available
-            articleDescription.textContent = article.description ? article.description : 'No description available';
-
-            const articleSource = document.createElement('p');
-            articleSource.className = 'article-source';
-            
-            // Check if source name is available
-            if (article.source && article.source.name) {
-              articleSource.textContent = `Source: ${article.source.name}`;
-            } else {
-              articleSource.textContent = 'Source: Not available'; // Set a default message if source is missing
-            }
-
-            // Create the "Listen" button
-            const listenButton = document.createElement('button');
-            listenButton.className = 'listen-button';
-            listenButton.textContent = 'Listen';
-            listenButton.style.cursor = 'pointer';
-
-            // Create the "Pause" button
-            const pauseButton = document.createElement('button');
-            pauseButton.className = 'pause-button';
-            pauseButton.textContent = 'Pause';
-            pauseButton.style.cursor = 'pointer';
-            pauseButton.style.display = 'none'; // Hide pause button initially
-
-            let audio = null; // Store the audio object
-            let isPlaying = false; // Track whether audio is playing
-
-            // Event listener for the "Listen" button
-            listenButton.addEventListener('click', function() {
-              const textToRead = `${articleDescription.textContent}. ${articleSource.textContent}`;
-
-              if (!audio) {
-                fetch('/generate-audio', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ text: textToRead }),
-                })
-                .then(response => response.blob())
-                .then(blob => {
-                  audio = new Audio(URL.createObjectURL(blob));
-                  audio.play();
-                  isPlaying = true;
-                  listenButton.style.display = 'none'; // Hide listen button
-                  pauseButton.style.display = 'inline-block'; // Show pause button
-
-                  // Reset buttons when the audio ends
-                  audio.addEventListener('ended', function() {
-                    isPlaying = false;
-                    listenButton.style.display = 'inline-block'; // Show listen button
-                    pauseButton.style.display = 'none'; // Hide pause button
-                  });
-                })
-                .catch(error => console.error('Error generating audio:', error));
-              } else {
-                audio.play();
-                isPlaying = true;
-                listenButton.style.display = 'none'; // Hide listen button
-                pauseButton.style.display = 'inline-block'; // Show pause button
-              }
-            });
-
-            // Event listener for the "Pause" button
-            pauseButton.addEventListener('click', function() {
-              if (audio && isPlaying) {
-                audio.pause();
-                isPlaying = false;
-                listenButton.style.display = 'inline-block'; // Show listen button
-                pauseButton.style.display = 'none'; // Hide pause button
-              }
-            });
-
-            articleBox.appendChild(articleTitle);
-            articleBox.appendChild(articleDescription);
-            articleBox.appendChild(articleSource); // Always append source (it'll show default if empty)
-            articleBox.appendChild(listenButton);
-            articleBox.appendChild(pauseButton);
-
-            newsContainer.appendChild(articleBox);
-
-            displayedArticles++;
-          }
-        });
-
-        if (displayedArticles === 0) {
-          newsContainer.innerHTML = '<p>No valid articles with summaries available.</p>';
         }
-      } else {
-        newsContainer.innerHTML = '<p>No articles available.</p>';
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching news:', error);
-      newsContainer.innerHTML = '<p>Unable to fetch news articles at this time.</p>';
-    });
+
+        if (articlesDisplayed === 0) {
+            showCachedNews(); // Show stored news if no new articles
+        }
+    }
+
+    function showCachedNews() {
+        let cachedNews = localStorage.getItem('cachedNews');
+        if (cachedNews) {
+            console.log("Using cached news data.");
+            let articles = JSON.parse(cachedNews);
+            articles.forEach(article => {
+                addArticleToUI(article);
+            });
+        } else {
+            newsContainer.innerHTML = '<p>No articles found.</p>';
+        }
+    }
+
+    function summarizeText(text, maxSentences = 3) {
+        if (!text) return "No content available.";
+        let sentences = text.match(/[^.!?]+[.!?]/g) || [];
+        return sentences.length <= maxSentences ? text : sentences.slice(0, maxSentences).join(" ");
+    }
+
+    function addArticleToUI(article) {
+        const articleBox = document.createElement('div');
+        articleBox.className = 'article-box';
+
+        const articleTitle = document.createElement('h3');
+        const titleLink = document.createElement('a');
+        titleLink.href = article.link || '#';
+        titleLink.target = '_blank';
+        titleLink.textContent = article.title;
+        articleTitle.appendChild(titleLink);
+
+        const articleDescription = document.createElement('p');
+        articleDescription.textContent = article.description;
+
+        const articleSource = document.createElement('p');
+        articleSource.className = 'article-source';
+        articleSource.innerHTML = `<strong>Source:</strong> ${article.source_id || "Unknown"}`;
+
+        articleBox.appendChild(articleTitle);
+        articleBox.appendChild(articleDescription);
+        articleBox.appendChild(articleSource);
+        newsContainer.appendChild(articleBox);
+    }
+
+    fetchNews();
 });
-</script>
+
+    </script>
+    
 </body>
 </html>

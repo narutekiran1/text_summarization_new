@@ -5,13 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function validatePassword() {
+            var password = document.getElementById("password").value;
+            var errorMsg = document.getElementById("error-msg");
+
+            // Regular expression for validation
+            var regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+            if (!regex.test(password)) {
+                errorMsg.innerHTML = "Password must be at least 8 characters, include at least one letter, one number, and one special character.";
+                return false;  // Prevent form submission
+            }
+
+            errorMsg.innerHTML = "";  // Clear error message
+            return true;  // Allow form submission
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h2>Sign Up</h2>
-        <form action="/signup" method="post">
+        <form action="/signup" method="post" onsubmit="return validatePassword()">
             <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
+            <input type="password" id="password" name="password" placeholder="Password" required><br>
+            <span id="error-msg" style="color: red;"></span><br>
             <input type="submit" value="Sign Up">
         </form>
         <p>Already have an account? <a href="/login">Login</a></p>

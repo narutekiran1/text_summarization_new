@@ -1,131 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHECK YOUR SUMMARY</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<style>
-/* General Styles */
-body {
-  font-family: 'Roboto', Arial, sans-serif;
-  background-color: #f5f7fa;
-  color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  padding: 20px;
-  box-sizing: border-box;
-  flex-direction: column;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHECK YOUR SUMMARY</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: #f4f7fb;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      flex-direction: column;
+    }
 
-/* Container Styles */
-.container {
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  max-width: 700px;
-  width: 100%;
-  padding: 20px;
-  border: 1px solid #ccc; /* Tiny subtle border */
-}
+    /* Container Styles */
+    .container {
+      background-color: rgb(187, 168, 205);
+     
+      border-radius: 5px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 800px;
+      padding: 30px;
+      text-align: center;
 
-/* Left Section Styles (Input Section) */
-.left-section {
-  background-color: #7fbf7f;
-  padding: 15px;
-  border-radius: 10px;
-  color: white;
-  margin-bottom: 15px; /* Reduced spacing */
-}
+    }
 
-.left-section textarea {
-  width: 100%;
-  height: 180px; /* Reduced height */
-  padding: 10px; /* Reduced padding */
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  resize: none;
-  background-color: rgba(255, 255, 255, 0.95);
-  color: #333;
-  font-size: 14px; /* Reduced font size */
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
-}
+    /* Left Section Styles (Input Section) */
+    .left-section {
+      background-color: #f7f7f7;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      border: 1px solid #ddd;
+    }
 
-.left-section textarea:focus {
-  outline: none;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
-}
+    .left-section textarea {
+      width: 100%;
+      height: 180px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background-color: #fafafa;
+      color: #333;
+      font-size: 14px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: border 0.3s ease;
+    }
 
-/* Right Section Styles (Output Section) */
-.right-section {
-  background-color: #5f93e0;
-  padding: 15px;
-  border-radius: 10px;
-  color: white;
-  text-align: center;
-  margin-top: 15px; /* Reduced spacing */
-}
+    .left-section textarea:focus {
+      outline: none;
+      border: 1px solid #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
 
-.right-section .alert {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 15px;
-  border-radius: 5px;
-}
+    /* Right Section Styles (Output Section) */
+    .right-section {
+      background-color: #f7f7f7;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+      margin-bottom: 60px;
+    }
 
-/* Generate Button Styles */
-.generate-button {
-  background: linear-gradient(145deg, #f16f6f, #e94d4d);
-  color: white;
-  padding: 10px 30px; /* Reduced padding */
-  font-size: 16px; /* Reduced font size */
-  font-weight: bold;
-  border-radius: 25px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: block;
-  margin: 20px auto; /* Consistent margin */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
+    .right-section .alert {
+      background-color: #e9f7f9;
+      color: #007bff;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 15px;
+      border-radius: 8px;
+    }
 
-.generate-button:hover {
-  background: linear-gradient(145deg, #e94d4d, #f16f6f);
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-}
+    /* Generate Button Styles */
+    .generate-button {
+      background-color:darkgray;
+      color:black ;
+      padding: 12px 35px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
 
-/* Waiting Message */
-.waiting-message {
-  font-size: 16px; /* Reduced font size */
-  color: #555;
-  margin-top: 15px;
-  display: none;
-}
+    .generate-button:hover {
+      background-color: rgb(205, 36, 36);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      color: #bec7d0;
+    }
 
-/* Footer */
-footer {
-  background-color: #333;
-  padding: 15px;
-  text-align: center;
-  color: white;
-  font-size: 14px;
-  border-radius: 0 0 10px 10px;
-  position: fixed;
-  width: 100%;
-  bottom: 0;
-}
-</style>
+    /* Waiting Message */
+    .waiting-message {
+      font-size: 16px;
+      color: #555;
+      margin-top: 20px;
+      display: none;
+      text-align: center;
+    }
+
+    /* Spinner Animation */
+    .waiting-message .spinner-border {
+      width: 2rem;
+      height: 2rem;
+      border-width: 4px;
+      color: #5f93e0;
+    }
+
+    /* Footer */
+    footer {
+      background-color: #333;
+      padding: 1px;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+      border-radius: 0 0 12px 12px;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container mx-auto flex flex-col p-5 rounded-lg shadow-lg">
+<div class="container">
   <!-- Left Section (Text Input) -->
   <div class="left-section">
     <form id="summary-form" action="/output" method="POST">
@@ -134,7 +147,7 @@ footer {
   </div>
 
   <!-- Generate Button -->
-  <div class="flex justify-center items-center">
+  <div>
     <button type="submit" class="generate-button" id="generate-button" form="summary-form">GENERATE</button>
   </div>
 
@@ -147,12 +160,20 @@ footer {
 </div>
 
 <!-- Waiting Message -->
-<div class="waiting-message text-center" id="waiting-message">Generating your summary, please wait...</div>
+<div class="waiting-message" id="waiting-message">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <div>Generating your summary, please wait...</div>
+</div>
 
 <!-- Footer -->
 <footer>
   <p>&copy; 2024 All rights reserved to SKA development team.</p>
 </footer>
+
+<!-- Bootstrap JS (for animations) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
   document.getElementById('summary-form').addEventListener('submit', function(event) {
