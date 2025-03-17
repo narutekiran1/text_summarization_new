@@ -126,22 +126,22 @@ def output():
     return render_template("text.html", output=output)
 
 # Generate audio from a news summary
-@app.route("/generate-audio", methods=["POST"])
+@app.route('/generate-audio', methods=['POST'])
 def generate_audio():
-    if "user" not in session:
-        return redirect(url_for("login"))
+    data = request.json
+    text = data.get("text", "")
+    language = data.get("language", "en")  # Default to English
 
-    data = request.get_json()
-    text = data.get("text")
-
-    if not text:
+    if not text.strip():
         return jsonify({"error": "No text provided"}), 400
 
-    tts = gTTS(text=text, lang='en')
-    temp_file = "temp.mp3"
-    tts.save(temp_file)
-
-    return send_file(temp_file, as_attachment=False)
+    try:
+        tts = gTTS(text=text, lang=language)
+        audio_path = "static/audio.mp3"
+        tts.save(audio_path)
+        return send_file(audio_path, mimetype="audio/mp3")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Login route
 @app.route("/login", methods=["GET", "POST"])

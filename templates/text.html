@@ -6,9 +6,7 @@
   <title>CHECK YOUR SUMMARY</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom Styles -->
   <style>
-    /* General Styles */
     body {
       font-family: 'Roboto', Arial, sans-serif;
       background-color: #f4f7fb;
@@ -16,38 +14,35 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
       padding: 20px;
       box-sizing: border-box;
       flex-direction: column;
     }
 
-    /* Container Styles */
     .container {
       background-color: rgb(187, 168, 205);
-     
-      border-radius: 5px;
+      border-radius: 10px;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
       width: 100%;
       max-width: 800px;
       padding: 30px;
       text-align: center;
-
+      flex: 1;
     }
 
-    /* Left Section Styles (Input Section) */
-    .left-section {
+    .left-section, .right-section {
       background-color: #f7f7f7;
       padding: 20px;
       border-radius: 10px;
-      margin-bottom: 25px;
       border: 1px solid #ddd;
+      margin-bottom: 20px;
     }
 
-    .left-section textarea {
+    textarea {
       width: 100%;
-      height: 180px;
+      min-height: 180px;
       padding: 12px;
       border-radius: 8px;
       border: 1px solid #ccc;
@@ -56,37 +51,18 @@
       font-size: 14px;
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
       transition: border 0.3s ease;
+      resize: vertical;
     }
 
-    .left-section textarea:focus {
+    textarea:focus {
       outline: none;
-      border: 1px solid #007bff;
+      border-color: #007bff;
       box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     }
 
-    /* Right Section Styles (Output Section) */
-    .right-section {
-      background-color: #f7f7f7;
-      padding: 20px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      margin-top: 20px;
-      margin-bottom: 60px;
-    }
-
-    .right-section .alert {
-      background-color: #e9f7f9;
-      color: #007bff;
-      font-size: 16px;
-      font-weight: 500;
-      padding: 15px;
-      border-radius: 8px;
-    }
-
-    /* Generate Button Styles */
     .generate-button {
-      background-color:darkgray;
-      color:black ;
+      background-color: darkgray;
+      color: black;
       padding: 12px 35px;
       font-size: 16px;
       font-weight: bold;
@@ -94,18 +70,19 @@
       border: none;
       cursor: pointer;
       transition: all 0.3s ease;
-      margin-top: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 200px;
+      margin: 10px auto;
+      display: block;
     }
 
     .generate-button:hover {
       background-color: rgb(205, 36, 36);
+      color: #fff;
       transform: translateY(-3px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-      color: #bec7d0;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
 
-    /* Waiting Message */
     .waiting-message {
       font-size: 16px;
       color: #555;
@@ -114,7 +91,6 @@
       text-align: center;
     }
 
-    /* Spinner Animation */
     .waiting-message .spinner-border {
       width: 2rem;
       height: 2rem;
@@ -122,36 +98,37 @@
       color: #5f93e0;
     }
 
-    /* Footer */
     footer {
       background-color: #333;
-      padding: 1px;
+      padding: 10px;
       text-align: center;
       color: white;
       font-size: 14px;
       border-radius: 0 0 12px 12px;
-      position: fixed;
       width: 100%;
+      position: fixed;
       bottom: 0;
+      left: 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Left Section (Text Input) -->
   <div class="left-section">
     <form id="summary-form" action="/output" method="POST">
-      <textarea id="text" name="text" rows="6" placeholder="Enter your text here..." required></textarea>
+      <textarea id="text" name="text" placeholder="Enter your text here..." required></textarea>
     </form>
   </div>
 
-  <!-- Generate Button -->
-  <div>
-    <button type="submit" class="generate-button" id="generate-button" form="summary-form">GENERATE</button>
-  </div>
+  <button type="submit" class="generate-button" id="generate-button" form="summary-form">GENERATE</button>
 
-  <!-- Right Section (Summary Output) -->
   <div class="right-section">
     <div class="alert alert-success" id="summary-output">
       <strong>SUMMARY:</strong> {{ output }}
@@ -159,7 +136,6 @@
   </div>
 </div>
 
-<!-- Waiting Message -->
 <div class="waiting-message" id="waiting-message">
   <div class="spinner-border" role="status">
     <span class="visually-hidden">Loading...</span>
@@ -167,12 +143,10 @@
   <div>Generating your summary, please wait...</div>
 </div>
 
-<!-- Footer -->
 <footer>
   <p>&copy; 2024 All rights reserved to SKA development team.</p>
 </footer>
 
-<!-- Bootstrap JS (for animations) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -180,7 +154,6 @@
     var generateButton = document.getElementById('generate-button');
     var waitingMessage = document.getElementById('waiting-message');
     
-    // Hide the generate button and show the waiting message
     generateButton.style.display = 'none';
     waitingMessage.style.display = 'block';
   });

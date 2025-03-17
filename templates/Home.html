@@ -222,31 +222,35 @@ div {
     gap: 10px; /* Add some space between buttons */
 }
 
+
 .listen-button, .pause-button {
-    background-color: #4CAF50;
-    color: white;
-    font-size: 18px;
+    display: block;
+    width: 25%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 16px;
     font-weight: bold;
-    padding: 10px 15px;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-    width: 120px;
     text-align: center;
-  }
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
-  .listen-button:hover {
-    background-color: #388E3C;
-  }
+.listen-button {
+    background-color: green;
+    color: white;
+    border: none;
+}
 
-  .pause-button {
-    background-color: #f44336;
-  }
+.pause-button {
+    background-color: red;
+    color: white;
+    border: none;
+}
 
-  .pause-button:hover {
-    background-color: #d32f2f;
-  }
+.listen-button:hover, .pause-button:hover {
+    opacity: 0.8;
+}
 
 /* Scrollable news container */
 #news-container {
@@ -263,7 +267,25 @@ div {
   margin-right: 6px;
 
 }
+select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 2px solid #f3c8c8;
+      font-size: 16px;
+      background-color: white;
+      color: #333;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bolder;
+      
+    }
 
+    select:hover {
+      background-color: #f3c8c8;
+      border-color: #f3c8c8;
+      color: black;
+    }
 
 </style>
 </head>
@@ -272,14 +294,8 @@ div {
   <div class="topnav">
     <!-- Logout button added here -->
     <h3 style="color:red;">In Short news</h3>
-    <select id="categoryDropdown">
-      <option value="all">All</option>
-      <option value="politics">Politics</option>
-      <option value="crypto">Crypto</option>
-      <option value="technology">Technology</option>
-      <option value="other">Other</option>
-  </select>
-  <select id="languageDropdown">
+    
+  <select id="languageDropdown" style="margin-left: 20px;">
     <option value="en" selected>English</option>
     <option value="hi">Hindi</option>
     <option value="mr">Marathi</option>
@@ -287,27 +303,37 @@ div {
   
     <a href="/login" class="logout-btn" style="border: 2px solid #f3c8c8; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: #333; font-weight: bold; display: inline-block; transition: background-color 0.3s ease, border-color 0.3s ease;"
     onmouseover="this.style.backgroundColor='#f3c8c8'; this.style.borderColor='#f3c8c8'; this.style.color='#000';" 
-    onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#f3c8c8'; this.style.color='#333';">Logout</a>
+    onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#f3c8c8'; this.style.color='#333';">LOGOUT</a>
     <a href="/text" class="topnav-check" style="border: 2px solid #f3c8c8; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: #333; font-weight: bold; display: inline-block; transition: background-color 0.3s ease, border-color 0.3s ease;"
     onmouseover="this.style.backgroundColor='#f3c8c8'; this.style.borderColor='#f3c8c8'; this.style.color='#000';" 
     onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#f3c8c8'; this.style.color='#333';">CHECK YOUR SUMMARY</a>
   </div>
+  
+  
 
   <div id="news-container"></div>
   
 
   <script>
-    document.addEventListener('DOMContentLoaded', async function () {
+   document.addEventListener('DOMContentLoaded', async function () {
     const apiKey = 'pub_72436a42dfa02a50ea760fffcbce61fb0179e'; // API Key
-    const apiUrl = `https://newsdata.io/api/1/news?apikey=${apiKey}&language=en`;
+    const baseApiUrl = `https://newsdata.io/api/1/news?apikey=${apiKey}`;
     const newsContainer = document.getElementById('news-container');
-    let currentAudio = null;
+    const languageDropdown = document.getElementById('languageDropdown');
     let articlesDisplayed = 0;
     let nextPage = null;
+    let currentAudio = null;  // Track currently playing audio
+    let currentPlayingButton = null;  // Track active button
 
     async function fetchNews() {
+        articlesDisplayed = 0;  
+        nextPage = null;        
+        newsContainer.innerHTML = ''; 
+
+        let selectedLanguage = languageDropdown ? languageDropdown.value : 'en';
+        let fetchUrl = `${baseApiUrl}&language=${selectedLanguage}`;
+
         while (articlesDisplayed < 30) {  
-            let fetchUrl = apiUrl;
             if (nextPage) fetchUrl += `&page=${nextPage}`;
 
             try {
@@ -315,15 +341,14 @@ div {
                 const data = await response.json();
                 console.log("API Response:", data);
 
-                if (data.status === "success" && data.results.length > 0) {
-                    // Save the data to localStorage
-                    localStorage.setItem('cachedNews', JSON.stringify(data.results));
+                if (data.status === "success" && data.results && data.results.length > 0) {
+                    localStorage.setItem(`cachedNews_${selectedLanguage}`, JSON.stringify(data.results));
 
                     data.results.forEach(article => {
                         if (articlesDisplayed >= 30) return;
                         if (article.title && article.description) {
                             article.description = summarizeText(article.description); 
-                            addArticleToUI(article);
+                            addArticleToUI(article, selectedLanguage);
                             articlesDisplayed++;
                         }
                     });
@@ -338,23 +363,24 @@ div {
                 }
             } catch (error) {
                 console.error("Error fetching news:", error);
-                showCachedNews(); // Show stored news if API fails
+                showCachedNews(selectedLanguage);
                 break;
             }
         }
 
         if (articlesDisplayed === 0) {
-            showCachedNews(); // Show stored news if no new articles
+            showCachedNews(selectedLanguage);
         }
     }
+    
 
-    function showCachedNews() {
-        let cachedNews = localStorage.getItem('cachedNews');
+    function showCachedNews(language) {
+        let cachedNews = localStorage.getItem(`cachedNews_${language}`);
         if (cachedNews) {
-            console.log("Using cached news data.");
+            console.log("Using cached news data for:", language);
             let articles = JSON.parse(cachedNews);
             articles.forEach(article => {
-                addArticleToUI(article);
+                addArticleToUI(article, language);
             });
         } else {
             newsContainer.innerHTML = '<p>No articles found.</p>';
@@ -367,7 +393,7 @@ div {
         return sentences.length <= maxSentences ? text : sentences.slice(0, maxSentences).join(" ");
     }
 
-    function addArticleToUI(article) {
+    function addArticleToUI(article, language) {
         const articleBox = document.createElement('div');
         articleBox.className = 'article-box';
 
@@ -385,16 +411,85 @@ div {
         articleSource.className = 'article-source';
         articleSource.innerHTML = `<strong>Source:</strong> ${article.source_id || "Unknown"}`;
 
+        const listenButton = document.createElement('button');
+        listenButton.textContent = "🔊 Listen";
+        listenButton.className = "listen-button";
+        listenButton.onclick = () => playAudio(article.description, language, listenButton);
+
+        const pauseButton = document.createElement('button');
+        pauseButton.textContent = "⏸ Pause";
+        pauseButton.className = "pause-button";
+        pauseButton.onclick = () => pauseAudio(listenButton);
+
         articleBox.appendChild(articleTitle);
         articleBox.appendChild(articleDescription);
         articleBox.appendChild(articleSource);
+        articleBox.appendChild(listenButton);
+        articleBox.appendChild(pauseButton);
         newsContainer.appendChild(articleBox);
+    }
+
+    async function playAudio(text, language, button) {
+        // Stop the previous audio if playing
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            if (currentPlayingButton) {
+                currentPlayingButton.textContent = "🔊 Listen";
+            }
+        }
+
+        button.textContent = "⏳ Loading...";
+        currentPlayingButton = button;
+
+        try {
+            const response = await fetch("/generate-audio", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, language })  // Send language
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch audio");
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            currentAudio = new Audio(audioUrl);
+            currentAudio.play()
+                .then(() => {
+                    button.textContent = "🔊 Playing...";
+                })
+                .catch(error => {
+                    console.error("Playback error:", error);
+                    button.textContent = "🔊 Listen";
+                });
+
+            // Reset button when audio ends
+            currentAudio.addEventListener("ended", () => {
+                button.textContent = "🔊 Listen";
+            });
+
+        } catch (error) {
+            console.error("Error generating audio:", error);
+            button.textContent = "🔊 Listen";
+        }
+    }
+
+    function pauseAudio(button) {
+        if (currentAudio) {
+            currentAudio.pause();
+            button.textContent = "🔊 Listen";
+        }
+    }
+
+    if (languageDropdown) {
+        languageDropdown.addEventListener('change', fetchNews);
     }
 
     fetchNews();
 });
 
-    </script>
+  </script>
     
 </body>
 </html>
