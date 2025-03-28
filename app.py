@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file, g, jsonify, session
 import sqlite3
 import os
-import time 
+import time
 from predict import summarize
 from preprocing import get
 import requests
@@ -32,11 +32,22 @@ def create_connection():
     # Create a fresh database
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
+    
+    # Users Table
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT NOT NULL,
                   password TEXT NOT NULL,
                   role TEXT NOT NULL)''')
+
+    # Summaries Table for history feature
+    c.execute('''CREATE TABLE IF NOT EXISTS summaries
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL,
+                  original_text TEXT NOT NULL,
+                  summarized_text TEXT NOT NULL,
+                  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+
     conn.commit()
     conn.close()
 
@@ -61,7 +72,6 @@ def close_db(e=None):
 def home():
     if "user" not in session:
         return redirect(url_for("login"))
-
     return render_template("Home.html")
 
 # Fetch news and summarize using PageRank
@@ -108,9 +118,9 @@ def fetch_news():
 def predict():
     if "user" not in session:
         return redirect(url_for("login"))
-
     return render_template("text.html")
 
+# Generate and save text summary
 @app.route("/output", methods=["POST"])
 def output():
     if "user" not in session:
@@ -119,11 +129,34 @@ def output():
     text = request.form.get("text")
     summary = summarize(paragraph=text)
     output = ' '.join(summary)
+
+    # Save summary in database
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("INSERT INTO summaries (username, original_text, summarized_text) VALUES (?, ?, ?)",
+              (session["user"], text, output))
+    conn.commit()
+
+    # Generate and save audio
     tts = gTTS(text=output, lang='en')
     tts.save("output.mp3")
     os.system("start output.mp3")
 
     return render_template("text.html", output=output)
+
+# View summary history
+@app.route("/history")
+def history():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT original_text, summarized_text, timestamp FROM summaries WHERE username=? ORDER BY timestamp DESC",
+              (session["user"],))
+    summaries = c.fetchall()
+
+    return render_template("history.html", summaries=summaries)
 
 # Generate audio from a news summary
 @app.route('/generate-audio', methods=['POST'])

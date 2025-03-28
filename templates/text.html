@@ -37,7 +37,7 @@
       padding: 20px;
       border-radius: 10px;
       border: 1px solid #ddd;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     textarea {
@@ -59,6 +59,39 @@
       border-color: #007bff;
       box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     }
+    
+    .generate-btn {
+            background: #28a745; /* Green color */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .generate-btn:disabled {
+            background: #6c757d; /* Grey when disabled */
+            cursor: not-allowed;
+        }
+
+        .loader {
+            display: none; /* Hidden by default */
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745; /* Green */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
     .generate-button {
       background-color: darkgray;
@@ -115,10 +148,68 @@
       .container {
         padding: 20px;
       }
+
     }
   </style>
+   <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f9fa;
+    }
+
+    /* Full-width Navbar */
+    .navbar {
+        width: 100%;
+        height: 1.5cm; /* Setting the height */
+        background: #dc3545; /* Red background */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px; /* Padding for left and right */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar h2 {
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .navbar .buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .navbar button {
+        background: white;
+        color: #dc3545;
+        border: none;
+        padding: 5px 15px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .navbar button:hover {
+        background: #fff5f5;
+    }
+</style>
 </head>
 <body>
+  <div class="navbar">
+    <h2>TEXT SUMMARIZATION</h2>
+    <div class="buttons">
+        <button onclick="window.location.href='/history'">History</button>
+        <button onclick="window.location.href='/logout'">Logout</button>
+    </div>
+</div>
+
+
 
 <div class="container">
   <div class="left-section">
@@ -128,6 +219,7 @@
   </div>
 
   <button type="submit" class="generate-button" id="generate-button" form="summary-form">GENERATE</button>
+  <div id="loader" class="loader"></div>
 
   <div class="right-section">
     <div class="alert alert-success" id="summary-output">
@@ -150,13 +242,20 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  document.getElementById('summary-form').addEventListener('submit', function(event) {
-    var generateButton = document.getElementById('generate-button');
-    var waitingMessage = document.getElementById('waiting-message');
-    
-    generateButton.style.display = 'none';
-    waitingMessage.style.display = 'block';
-  });
+   function generateSummary() {
+            let btn = document.getElementById("generateBtn");
+            let loader = document.getElementById("loader");
+
+            // Hide the button, show the loader
+            btn.style.display = "none";
+            loader.style.display = "block";
+
+            // Simulating summary generation (Replace with actual backend call)
+            setTimeout(() => {
+                window.location.href = "output.html"; // Redirect to output page
+            }, 3000); // Simulated 3-second delay
+        }
+  
 </script>
 
 </body>
