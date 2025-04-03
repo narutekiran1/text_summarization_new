@@ -3,54 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CHECK YOUR SUMMARY</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='case-study_17390414.png') }}">
+
+  <title>TEXT SUMMARIZATION</title>
+  
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
     body {
       font-family: 'Roboto', Arial, sans-serif;
       background-color: #f4f7fb;
       color: #333;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;  /* Full viewport height */
+      margin: 0;
     }
 
+    /* Navbar */
+    .navbar {
+      width: 100%;
+      height: 1.5cm;
+      background: #dc3545;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    .navbar h2 {
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .navbar .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .navbar button {
+      background: white;
+      color: #dc3545;
+      border: none;
+      padding: 5px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .navbar button:hover {
+      background: #fff5f5;
+    }
+
+    /* Centered Container */
     .container {
       background-color: rgb(187, 168, 205);
       border-radius: 10px;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 800px;
-      padding: 30px;
+      width: 70%; /* Increased width */
+      max-width: 900px;
+      padding: 20px;
       text-align: center;
-      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
+    /* Sections */
     .left-section, .right-section {
       background-color: #f7f7f7;
-      padding: 20px;
+      padding: 15px;
       border-radius: 10px;
       border: 1px solid #ddd;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
 
     textarea {
       width: 100%;
-      min-height: 180px;
+      min-height: 120px; /* Reduced height */
       padding: 12px;
       border-radius: 8px;
       border: 1px solid #ccc;
       background-color: #fafafa;
       color: #333;
       font-size: 14px;
-      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
-      transition: border 0.3s ease;
       resize: vertical;
     }
 
@@ -59,44 +111,12 @@
       border-color: #007bff;
       box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     }
-    
-    .generate-btn {
-            background: #28a745; /* Green color */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
 
-        .generate-btn:disabled {
-            background: #6c757d; /* Grey when disabled */
-            cursor: not-allowed;
-        }
-
-        .loader {
-            display: none; /* Hidden by default */
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #28a745; /* Green */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
+    /* Generate Button */
     .generate-button {
-      background-color: darkgray;
-      color: black;
-      padding: 12px 35px;
+      background-color: #28a745;
+      color: white;
+      padding: 10px 30px;
       font-size: 16px;
       font-weight: bold;
       border-radius: 10px;
@@ -104,40 +124,47 @@
       cursor: pointer;
       transition: all 0.3s ease;
       width: 100%;
-      max-width: 200px;
-      margin: 10px auto;
+      max-width: 180px;
+      margin: 15px auto;
       display: block;
     }
 
-    .generate-button:hover {
+    .generate-button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .generate-button:hover:not(:disabled) {
       background-color: rgb(205, 36, 36);
       color: #fff;
       transform: translateY(-3px);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
 
-    .waiting-message {
-      font-size: 16px;
-      color: #555;
-      margin-top: 20px;
+    /* Loader */
+    .loader {
       display: none;
-      text-align: center;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #28a745;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
     }
 
-    .waiting-message .spinner-border {
-      width: 2rem;
-      height: 2rem;
-      border-width: 4px;
-      color: #5f93e0;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
+    /* Footer */
     footer {
       background-color: #333;
       padding: 10px;
       text-align: center;
       color: white;
       font-size: 14px;
-      border-radius: 0 0 12px 12px;
       width: 100%;
       position: fixed;
       bottom: 0;
@@ -146,117 +173,68 @@
 
     @media (max-width: 768px) {
       .container {
-        padding: 20px;
+        width: 85%;
+        padding: 15px;
       }
-
     }
   </style>
-   <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f8f9fa;
-    }
 
-    /* Full-width Navbar */
-    .navbar {
-        width: 100%;
-        height: 1.5cm; /* Setting the height */
-        background: #dc3545; /* Red background */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px; /* Padding for left and right */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .navbar h2 {
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
-        margin: 0;
-    }
-
-    .navbar .buttons {
-        display: flex;
-        gap: 10px;
-    }
-
-    .navbar button {
-        background: white;
-        color: #dc3545;
-        border: none;
-        padding: 5px 15px;
-        font-size: 14px;
-        font-weight: bold;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .navbar button:hover {
-        background: #fff5f5;
-    }
-</style>
 </head>
 <body>
+
+  <!-- Navbar -->
   <div class="navbar">
     <h2>TEXT SUMMARIZATION</h2>
     <div class="buttons">
         <button onclick="window.location.href='/history'">History</button>
         <button onclick="window.location.href='/logout'">Logout</button>
     </div>
-</div>
-
-
-
-<div class="container">
-  <div class="left-section">
-    <form id="summary-form" action="/output" method="POST">
-      <textarea id="text" name="text" placeholder="Enter your text here..." required></textarea>
-    </form>
   </div>
 
-  <button type="submit" class="generate-button" id="generate-button" form="summary-form">GENERATE</button>
-  <div id="loader" class="loader"></div>
+  <!-- Main Content -->
+  <div class="container">
+    <div class="left-section">
+      <form id="summary-form" action="/output" method="POST">
+        <textarea id="text" name="text" placeholder="Enter your text here..." required></textarea>
+      </form>
+    </div>
 
-  <div class="right-section">
-    <div class="alert alert-success" id="summary-output">
-      <strong>SUMMARY:</strong> {{ output }}
+    <!-- Generate Button & Loader -->
+    <button type="submit" class="generate-button" id="generate-button" form="summary-form" onclick="generateSummary()">GENERATE</button>
+    <div id="loader" class="loader"></div>
+
+    <!-- Summary Output -->
+    <div class="right-section">
+      <div class="alert alert-success" id="summary-output">
+        <strong>SUMMARY:</strong> {{ output }}
+      </div>
     </div>
   </div>
-</div>
 
-<div class="waiting-message" id="waiting-message">
-  <div class="spinner-border" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
-  <div>Generating your summary, please wait...</div>
-</div>
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 All rights reserved to SKA development team.</p>
+  </footer>
 
-<footer>
-  <p>&copy; 2024 All rights reserved to SKA development team.</p>
-</footer>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-   function generateSummary() {
-            let btn = document.getElementById("generateBtn");
-            let loader = document.getElementById("loader");
-
-            // Hide the button, show the loader
-            btn.style.display = "none";
-            loader.style.display = "block";
-
-            // Simulating summary generation (Replace with actual backend call)
-            setTimeout(() => {
-                window.location.href = "output.html"; // Redirect to output page
-            }, 3000); // Simulated 3-second delay
-        }
+  <!-- JavaScript Logic -->
+  <script>
+    function generateSummary() {
+      let btn = document.getElementById("generate-button");
   
-</script>
+      // Disable button and change text
+      btn.innerText = "Generating...";
+      btn.disabled = true;
+  
+      // Simulate loading (replace with actual backend call)
+      setTimeout(() => {
+        document.getElementById("summary-form").submit(); // Submit form to output.html
+      }, 3000);
+    }
+  </script>
+  
 
 </body>
 </html>
