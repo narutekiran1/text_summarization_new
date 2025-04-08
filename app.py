@@ -6,6 +6,7 @@ from predict import summarize
 from preprocing import get
 import requests
 from gtts import gTTS
+import socket
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session management
@@ -121,15 +122,13 @@ def predict():
     return render_template("text.html")
 
 # Generate and save text summary
+
 @app.route("/output", methods=["POST"])
 def output():
     if "user" not in session:
         return redirect(url_for("login"))
 
     text = request.form.get("text")
-    if not text:
-        return render_template("text.html", error="No text provided")
-
     summary = summarize(paragraph=text)
     output = ' '.join(summary)
 
@@ -140,14 +139,21 @@ def output():
               (session["user"], text, output))
     conn.commit()
 
-    # Generate and save audio file
+    # Generate and save audio
     tts = gTTS(text=output, lang='en')
-    audio_path = os.path.join("static", "output.mp3")
+    audio_path = os.path.join("static", "audio", "output.mp3")
     tts.save(audio_path)
 
-    # Now render a new output page showing summary and audio
-    return render_template("output.html", original=text, summary=output, audio_file=audio_path)
+    # Only play audio if running on localhost
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    if local_ip.startswith("127.") or local_ip == "localhost":
+        try:
+            os.system("start " + audio_path)
+        except Exception as e:
+            print("Audio play error:", e)
 
+    return render_template("output.html", original=text, summary=output, audio_file=audio_path)
 @app.route("/history")
 def history():
     if "user" not in session:
