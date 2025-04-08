@@ -8,9 +8,16 @@ from gensim.models import Word2Vec
 from scipy.spatial import distance
 import networkx as nx
 
-# Download NLTK data
-nltk.download('stopwords')
-nltk.download('punkt')
+# ✅ Ensure NLTK data is available
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
 
 def summarize(filepath=None, paragraph=''):
     # Read text from file if filepath is provided
