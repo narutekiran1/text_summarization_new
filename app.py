@@ -127,6 +127,9 @@ def output():
         return redirect(url_for("login"))
 
     text = request.form.get("text")
+    if not text:
+        return render_template("text.html", error="No text provided")
+
     summary = summarize(paragraph=text)
     output = ' '.join(summary)
 
@@ -137,14 +140,14 @@ def output():
               (session["user"], text, output))
     conn.commit()
 
-    # Generate and save audio
+    # Generate and save audio file
     tts = gTTS(text=output, lang='en')
-    tts.save("output.mp3")
-    os.system("start output.mp3")
+    audio_path = os.path.join("static", "output.mp3")
+    tts.save(audio_path)
 
-    return render_template("text.html", output=output)
+    # Now render a new output page showing summary and audio
+    return render_template("output.html", original=text, summary=output, audio_file=audio_path)
 
-# View summary history
 @app.route("/history")
 def history():
     if "user" not in session:
