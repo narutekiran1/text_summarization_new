@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 import nltk
 import re
-from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
+from nltk.tokenize.punkt import PunktSentenceTokenizer
 from gensim.models import Word2Vec
 from scipy.spatial import distance
 import networkx as nx
 
-# ✅ Ensure NLTK data is available
+# Ensure 'punkt' and 'stopwords' are available
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -19,14 +19,17 @@ try:
 except LookupError:
     nltk.download('stopwords')
 
+
 def summarize(filepath=None, paragraph=''):
+    tokenizer = PunktSentenceTokenizer()
+
     # Read text from file if filepath is provided
     if filepath:
         with open(filepath, "r", encoding="utf8") as f:
             text = f.read()
-        Broken_in_sentences = sent_tokenize(text)
+        Broken_in_sentences = tokenizer.tokenize(text)
     else:
-        Broken_in_sentences = sent_tokenize(paragraph)
+        Broken_in_sentences = tokenizer.tokenize(paragraph)
 
     # If no valid sentences, return empty
     if not Broken_in_sentences:
@@ -53,7 +56,7 @@ def summarize(filepath=None, paragraph=''):
 
     # Convert sentences to vectors
     sentence_embedded_value = [
-        [w2v.wv[word][0] for word in words if word in w2v.wv] 
+        [w2v.wv[word][0] for word in words if word in w2v.wv]
         for words in Tokenized_sentence
     ]
 
@@ -78,7 +81,7 @@ def summarize(filepath=None, paragraph=''):
     nx_graph = nx.from_numpy_array(similarity_matrix)
 
     try:
-        scores = nx.pagerank(nx_graph, alpha=0.85, max_iter=1000, tol=1e-6, personalization=None)
+        scores = nx.pagerank(nx_graph, alpha=0.85, max_iter=1000, tol=1e-6)
     except nx.PowerIterationFailedConvergence:
         print("⚠️ PageRank failed to converge! Using uniform scores.")
         scores = {i: 1/len(Broken_in_sentences) for i in range(len(Broken_in_sentences))}
@@ -88,6 +91,6 @@ def summarize(filepath=None, paragraph=''):
     top = dict(sorted(top_sentence.items(), key=lambda x: x[1], reverse=True)[:3])
 
     # Return summarized sentences
-    summarized_text = [sent for sent in Broken_in_sentences if sent in top.keys()]
+    summarized_text = [sent for sent in Broken_in_sentences if sent in top]
     print(" ".join(summarized_text))
-    return summarized_text  # Returns a list of top-ranked sentences
+    return summarized_text
