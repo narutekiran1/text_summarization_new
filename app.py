@@ -24,24 +24,22 @@ def create_connection():
             if result[0] != "ok":
                 print("Database corruption detected! Resetting database...")
                 conn.close()
-                os.remove(DATABASE)  # Delete the corrupted database
+                os.remove(DATABASE)
         except sqlite3.DatabaseError:
             print("Database error detected. Resetting database...")
             conn.close()
-            os.remove(DATABASE)  # Delete the corrupted database
+            os.remove(DATABASE)
 
     # Create a fresh database
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
-    
-    # Users Table
+
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT NOT NULL,
                   password TEXT NOT NULL,
                   role TEXT NOT NULL)''')
 
-    # Summaries Table for history feature
     c.execute('''CREATE TABLE IF NOT EXISTS summaries
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT NOT NULL,
@@ -55,27 +53,23 @@ def create_connection():
 # Initialize the database
 create_connection()
 
-# Helper function to get a database connection
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(DATABASE)
     return g.db
 
-# Close database connection after each request
 @app.teardown_appcontext
 def close_db(e=None):
     db = g.pop('db', None)
     if db is not None:
         db.close()
 
-# Home route (User must be logged in)
 @app.route("/")
 def home():
     if "user" not in session:
         return redirect(url_for("login"))
     return render_template("Home.html")
 
-# Fetch news and summarize using PageRank
 @app.route("/fetch-news")
 def fetch_news():
     if "user" not in session:
@@ -91,19 +85,18 @@ def fetch_news():
             return jsonify({"error": "Failed to fetch news"}), 500
 
         articles = []
-        for article in data["results"][:30]:  # Get up to 30 articles
+        for article in data["results"][:30]:
             title = article.get("title", "No title available")
             description = article.get("description", "No description available")
             source = article.get("source_id", "Unknown Source")
             url = article.get("link", "#")
 
-            # Apply PageRank summarization
             summary_list = summarize(paragraph=description)
-            summary = " ".join(summary_list) if summary_list else description  # Fallback to original text if summarization fails
+            summary = " ".join(summary_list) if summary_list else description
 
             articles.append({
                 "title": title,
-                "summary": summary,  # Use summarized text
+                "summary": summary,
                 "source": source,
                 "url": url
             })
@@ -114,14 +107,11 @@ def fetch_news():
         print(f"Error fetching news: {e}")
         return jsonify({"error": "Failed to connect to the news API"}), 500
 
-# Route for text summarization
 @app.route("/text", methods=["GET", "POST"])
 def predict():
     if "user" not in session:
         return redirect(url_for("login"))
     return render_template("text.html")
-
-# Generate and save text summary
 
 @app.route("/output", methods=["POST"])
 def output():
@@ -132,16 +122,18 @@ def output():
     summary = summarize(paragraph=text)
     output = ' '.join(summary)
 
-    # Save summary in database
     conn = get_db()
     c = conn.cursor()
     c.execute("INSERT INTO summaries (username, original_text, summarized_text) VALUES (?, ?, ?)",
               (session["user"], text, output))
     conn.commit()
 
-    # Generate and save audio
+    # Ensure audio directory exists
+    audio_dir = os.path.join("static", "audio")
+    os.makedirs(audio_dir, exist_ok=True)
+
     tts = gTTS(text=output, lang='en')
-    audio_path = os.path.join("static", "audio", "output.mp3")
+    audio_path = os.path.join(audio_dir, "output.mp3")
     tts.save(audio_path)
 
     # Only play audio if running on localhost
@@ -154,6 +146,7 @@ def output():
             print("Audio play error:", e)
 
     return render_template("output.html", original=text, summary=output, audio_file=audio_path)
+
 @app.route("/history")
 def history():
     if "user" not in session:
@@ -167,25 +160,27 @@ def history():
 
     return render_template("history.html", summaries=summaries)
 
-# Generate audio from a news summary
 @app.route('/generate-audio', methods=['POST'])
 def generate_audio():
     data = request.json
     text = data.get("text", "")
-    language = data.get("language", "en")  # Default to English
+    language = data.get("language", "en")
 
     if not text.strip():
         return jsonify({"error": "No text provided"}), 400
 
     try:
+        # Ensure audio directory exists
+        audio_dir = os.path.join("static", "audio")
+        os.makedirs(audio_dir, exist_ok=True)
+
         tts = gTTS(text=text, lang=language)
-        audio_path = "static/audio.mp3"
+        audio_path = os.path.join(audio_dir, "audio.mp3")
         tts.save(audio_path)
         return send_file(audio_path, mimetype="audio/mp3")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -200,21 +195,20 @@ def login():
         conn.close()
 
         if user:
-            session["user"] = username  # Store user session
+            session["user"] = username
             return redirect(url_for("home"))
         else:
             error = "Invalid username or password. Try again."
 
     return render_template("login.html", error=error)
 
-# Signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     error = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        role = "user"  # Default role
+        role = "user"
 
         conn = sqlite3.connect(DATABASE)
         c = conn.cursor()
@@ -231,10 +225,9 @@ def signup():
 
     return render_template("signup.html", error=error)
 
-# Logout route
 @app.route("/logout")
 def logout():
-    session.pop("user", None)  # Remove user from session
+    session.pop("user", None)
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
