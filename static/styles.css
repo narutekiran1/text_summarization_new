@@ -1,0 +1,147 @@
+/* Base Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+  }
+  
+  .topnav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    padding: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .topnav select,
+  .topnav a {
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    background-color: #444;
+    border: none;
+    border-radius: 4px;
+    margin: 5px;
+    cursor: pointer;
+  }
+  
+  .topnav a:hover,
+  .topnav select:hover {
+    background-color: #555;
+  }
+  
+  #news-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .article-box {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    background-color: #fafafa;
+  }
+  
+  .article-title {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+  }
+  
+  .article-description {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+  }
+  
+  .article-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  .article-meta {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 10px;
+  }
+  
+  .listen-button, .pause-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .listen-button {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .pause-button {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  /* ✅ Mobile Responsive Styles */
+  @media screen and (max-width: 600px) {
+    .topnav {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .topnav select,
+    .topnav a {
+      width: 100%;
+      margin: 5px 0;
+      text-align: center;
+    }
+  
+    #news-container {
+      margin: 10px;
+      padding: 10px;
+    }
+  
+    .article-box {
+      padding: 10px;
+      margin: 10px 0;
+    }
+  
+    .article-title {
+      font-size: 1.2em;
+    }
+  
+    .article-description {
+      font-size: 1em;
+    }
+  
+    .article-meta {
+      font-size: 0.8em;
+    }
+  
+    .article-image {
+      max-height: 200px;
+      object-fit: cover;
+    }
+  
+    .listen-button, .pause-button {
+      width: 100%;
+      margin: 5px 0;
+    }
+  
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+  
