@@ -427,6 +427,7 @@ select {
     <option value="mr">Marathi</option>
   </select>
   
+  
     <a href="/login" class="logout-btn" style="border: 2px solid #f3c8c8; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: #333; font-weight: bold; display: inline-block; transition: background-color 0.3s ease, border-color 0.3s ease;"
     onmouseover="this.style.backgroundColor='#f3c8c8'; this.style.borderColor='#f3c8c8'; this.style.color='#000';" 
     onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#f3c8c8'; this.style.color='#333';">LOGOUT</a>
@@ -452,6 +453,25 @@ select {
     let nextPage = null;
     let currentAudio = null;  // Track currently playing audio
     let currentPlayingButton = null;  // Track active button
+    function changeCategory() {
+    const selectedCategory = document.getElementById('category-dropdown').value;
+    fetchNewsByCategory(selectedCategory); // Assuming this is the function that fetches news for a category
+}
+
+// You might already have a function like this for language
+function fetchNewsByCategory(category) {
+    fetch(`https://newsdata.io/api/1/news?category=${category}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update your page with the new news data based on the selected category
+            displayNews(data);
+        })
+        .catch(error => console.error('Error fetching news:', error));
+}
+
+function displayNews(news) {
+    // Implement how the fetched news is displayed in the UI
+}
 
     async function fetchNews() {
         articlesDisplayed = 0;  
