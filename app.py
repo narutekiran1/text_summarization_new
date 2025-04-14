@@ -1,6 +1,7 @@
-import os
-import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, send_file, g, jsonify, session
+import sqlite3
+import os
+import time
 from predict import summarize
 from preprocing import get
 import requests
@@ -10,46 +11,44 @@ import socket
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session management
 
-# Change the database path to use a persistent disk on Render
-DATABASE = "database.db"  # Ensure this path is correct for your persistent disk
+DATABASE = "database.db"
 
-# Function to create or check the database integrity
+# Function to create or reset the database
 def create_connection():
     if os.path.exists(DATABASE):
         try:
-            # Check if the database is corrupt
             conn = sqlite3.connect(DATABASE)
             c = conn.cursor()
             c.execute("PRAGMA integrity_check;")
             result = c.fetchone()
             if result[0] != "ok":
-                print("Database corruption detected! Please resolve it manually.")
+                print("Database corruption detected! Resetting database...")
                 conn.close()
+                os.remove(DATABASE)
         except sqlite3.DatabaseError:
-            print("Database error detected. Please resolve it manually.")
+            print("Database error detected. Resetting database...")
             conn.close()
+            os.remove(DATABASE)
 
-    else:
-        # If the database doesn't exist, create a fresh one
-        conn = sqlite3.connect(DATABASE)
-        c = conn.cursor()
+    # Create a fresh database
+    conn = sqlite3.connect(DATABASE)
+    c = conn.cursor()
 
-        # Creating tables if they don't already exist
-        c.execute('''CREATE TABLE IF NOT EXISTS users
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      username TEXT NOT NULL,
-                      password TEXT NOT NULL,
-                      role TEXT NOT NULL)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS users
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL,
+                  password TEXT NOT NULL,
+                  role TEXT NOT NULL)''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS summaries
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      username TEXT NOT NULL,
-                      original_text TEXT NOT NULL,
-                      summarized_text TEXT NOT NULL,
-                      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS summaries
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL,
+                  original_text TEXT NOT NULL,
+                  summarized_text TEXT NOT NULL,
+                  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
 
-        conn.commit()
-        conn.close()
+    conn.commit()
+    conn.close()
 
 # Initialize the database
 create_connection()
