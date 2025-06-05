@@ -7,7 +7,7 @@ from preprocing import get
 import requests
 from gtts import gTTS
 import socket
-
+from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session management
 
@@ -107,8 +107,9 @@ def fetch_news():
         print(f"Error fetching news: {e}")
         return jsonify({"error": "Failed to connect to the news API"}), 500
 
-@app.route("/text", methods=["GET", "POST"])
-def predict():
+
+@app.route("/text")
+def input_text():
     if "user" not in session:
         return redirect(url_for("login"))
     return render_template("text.html")
@@ -128,12 +129,15 @@ def output():
               (session["user"], text, output))
     conn.commit()
 
-    # Ensure audio directory exists
+    # Create unique filename
     audio_dir = os.path.join("static", "audio")
     os.makedirs(audio_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    audio_filename = f"output_{timestamp}.mp3"
+    audio_path = os.path.join(audio_dir, audio_filename)
 
+    # Generate audio
     tts = gTTS(text=output, lang='en')
-    audio_path = os.path.join(audio_dir, "output.mp3")
     tts.save(audio_path)
 
     # Only play audio if running on localhost
@@ -145,7 +149,8 @@ def output():
         except Exception as e:
             print("Audio play error:", e)
 
-    return render_template("output.html", original=text, summary=output, audio_file=audio_path)
+    return render_template("output.html", original=text, summary=output, audio_file=f"audio/{audio_filename}")
+
 
 @app.route("/history")
 def history():

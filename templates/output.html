@@ -28,14 +28,15 @@
         </div>
 
         <div class="mb-6 text-center">
-            <audio controls class="mx-auto">
-                <source src="{{ url_for('static', filename='output.mp3') }}" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
+           <audio controls class="mx-auto">
+    <source src="{{ url_for('static', filename=audio_file) }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
         </div>
 
         <div class="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-            <a href="{{ url_for('predict') }}" class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition">Summarize Another</a>
+            <a href="{{ url_for('input_text') }}" class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition">Summarize Another</a>
             <a href="{{ url_for('history') }}" class="bg-gray-800 text-white py-2 px-6 rounded-lg hover:bg-gray-900 transition">View History</a>
         </div>
     </div>
