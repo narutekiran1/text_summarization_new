@@ -6,12 +6,20 @@ import oracledb
 from predict import summarize
 from preprocing import get
 
+
+
 # ===========================
 # Flask App
 # ===========================
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session management
 
+
+connection = oracledb.connect(
+    user="proj_user",
+    password="project123",
+    dsn="localhost:1521/XEPDB1"   # DSN goes here
+)
 # ===========================
 # Oracle DB Config
 # ===========================

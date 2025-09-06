@@ -3,6 +3,7 @@ gunicorn
 nltk
 gTTS==2.5.1
 
+
 google-generativeai
 beautifulsoup4==4.12.3
 blinker==1.8.2
@@ -36,3 +37,4 @@ flask-cors==4.0.0            # To handle CORS in your Flask backend
 pydub==0.25.1                # For audio file conversion/manipulation (useful if exporting MP3s)
 PyPDF2==3.0.1                # If you plan to support PDF input later
 SpeechRecognition==3.10.1    # If you plan to include voice input in future
+oracledb==1.4.2
