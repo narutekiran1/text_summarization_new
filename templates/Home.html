@@ -442,11 +442,12 @@ select {
   <audio id="newsAudio" controls style="display: none; margin-top: 20px; width: 100%;"></audio>
   
 
-  <script>
+  <!-- <script>
     
    document.addEventListener('DOMContentLoaded', async function () {
     const apiKey = 'pub_72436a42dfa02a50ea760fffcbce61fb0179e'; // API Key
-    const baseApiUrl = `https://newsdata.io/api/1/news?apikey=${apiKey}`;
+     const baseApiUrl = `/fetch-news`; // now calls Flask backend
+;
     const newsContainer = document.getElementById('news-container');
     const languageDropdown = document.getElementById('languageDropdown');
     let articlesDisplayed = 0;
@@ -474,53 +475,32 @@ function displayNews(news) {
 }
 
     async function fetchNews() {
-        articlesDisplayed = 0;  
-        nextPage = null;        
-        newsContainer.innerHTML = ''; 
+    newsContainer.innerHTML = '';
 
-        let selectedLanguage = languageDropdown ? languageDropdown.value : 'en';
-        let fetchUrl = `${baseApiUrl}&language=${selectedLanguage}`;
+    try {
+        const response = await fetch("/fetch-news");
+        const data = await response.json();
+        console.log("Flask Response:", data);
 
-        while (articlesDisplayed < 30) {  
-            if (nextPage) fetchUrl += `&page=${nextPage}`;
-
-            try {
-                const response = await fetch(fetchUrl);
-                const data = await response.json();
-                console.log("API Response:", data);
-
-                if (data.status === "success" && data.results && data.results.length > 0) {
-                    localStorage.setItem(`cachedNews_${selectedLanguage}`, JSON.stringify(data.results));
-
-                    data.results.forEach(article => {
-                        if (articlesDisplayed >= 30) return;
-                        if (article.title && article.description) {
-                            article.description = summarizeText(article.description); 
-                            addArticleToUI(article, selectedLanguage);
-                            articlesDisplayed++;
-                        }
-                    });
-
-                    if (data.nextPage) {
-                        nextPage = data.nextPage;
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            } catch (error) {
-                console.error("Error fetching news:", error);
-                showCachedNews(selectedLanguage);
-                break;
-            }
+        if (data.articles && data.articles.length > 0) {
+            data.articles.forEach(article => {
+                addArticleToUI(article, article.language || 'en');
+            });
+        } else {
+            newsContainer.innerHTML = '<p>No articles found.</p>';
         }
+    } catch (error) {
+        console.error("Error fetching from Flask:", error);
+        newsContainer.innerHTML = '<p>Error loading news.</p>';
+    }
+}
+
 
         if (articlesDisplayed === 0) {
             showCachedNews(selectedLanguage);
         }
     }
-    
+  
 
     function showCachedNews(language) {
         let cachedNews = localStorage.getItem(`cachedNews_${language}`);
@@ -637,7 +617,125 @@ function displayNews(news) {
     fetchNews();
 });
 
-  </script>
-    
+  </script> -->
+    <script>
+document.addEventListener('DOMContentLoaded', async function () {
+    const newsContainer = document.getElementById('news-container');
+    const languageDropdown = document.getElementById('languageDropdown');
+    let currentAudio = null;
+    let currentPlayingButton = null;
+
+    // Fetch news from Flask with selected language
+    async function fetchNews() {
+        newsContainer.innerHTML = '';
+
+        const selectedLanguage = languageDropdown ? languageDropdown.value : "en";
+        try {
+            const response = await fetch(`/fetch-news?lang=${selectedLanguage}`); // 👈 pass language
+            const data = await response.json();
+            console.log("Flask Response:", data);
+
+            if (data.articles && data.articles.length > 0) {
+                data.articles.forEach(article => {
+                    addArticleToUI(article, selectedLanguage);
+                });
+            } else {
+                newsContainer.innerHTML = '<p>No articles found.</p>';
+            }
+        } catch (error) {
+            console.error("Error fetching from Flask:", error);
+            newsContainer.innerHTML = '<p>Error loading news.</p>';
+        }
+    }
+
+    function addArticleToUI(article, language) {
+        const articleBox = document.createElement('div');
+        articleBox.className = 'article-box';
+
+        const articleTitle = document.createElement('h3');
+        const titleLink = document.createElement('a');
+        titleLink.href = article.url || '#';
+        titleLink.target = '_blank';
+        titleLink.textContent = article.title;
+        articleTitle.appendChild(titleLink);
+
+        const articleDescription = document.createElement('p');
+        articleDescription.textContent = article.summary || article.description;
+
+        const articleSource = document.createElement('p');
+        articleSource.className = 'article-source';
+        articleSource.innerHTML = `<strong>Source:</strong> ${article.source || "Unknown"}`;
+
+        const listenButton = document.createElement('button');
+        listenButton.textContent = "🔊 Listen";
+        listenButton.className = "listen-button";
+        listenButton.onclick = () => playAudio(article.summary || article.description, language, listenButton);
+
+        const pauseButton = document.createElement('button');
+        pauseButton.textContent = "⏸ Pause";
+        pauseButton.className = "pause-button";
+        pauseButton.onclick = () => pauseAudio(listenButton);
+
+        articleBox.appendChild(articleTitle);
+        articleBox.appendChild(articleDescription);
+        articleBox.appendChild(articleSource);
+        articleBox.appendChild(listenButton);
+        articleBox.appendChild(pauseButton);
+        newsContainer.appendChild(articleBox);
+    }
+
+    async function playAudio(text, language, button) {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            if (currentPlayingButton) {
+                currentPlayingButton.textContent = "🔊 Listen";
+            }
+        }
+
+        button.textContent = "⏳ Loading...";
+        currentPlayingButton = button;
+
+        try {
+            const response = await fetch("/generate-audio", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, language })
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch audio");
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            currentAudio = new Audio(audioUrl);
+            await currentAudio.play();
+            button.textContent = "🔊 Playing...";
+
+            currentAudio.addEventListener("ended", () => {
+                button.textContent = "🔊 Listen";
+            });
+        } catch (error) {
+            console.error("Error generating audio:", error);
+            button.textContent = "🔊 Listen";
+        }
+    }
+
+    function pauseAudio(button) {
+        if (currentAudio) {
+            currentAudio.pause();
+            button.textContent = "🔊 Listen";
+        }
+    }
+
+    if (languageDropdown) {
+        languageDropdown.addEventListener('change', fetchNews);
+    }
+
+    // Initial fetch
+    fetchNews();
+});
+</script>
+
 </body>
 </html>

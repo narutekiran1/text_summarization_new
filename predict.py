@@ -67,7 +67,7 @@ def summarize(filepath=None, paragraph=''):
         for embedding in sentence_embedded_value
     ]
 
-    # Create similarity matrix
+    # Create similarity matrixs
     similarity_matrix = np.zeros([len(Tokenized_sentence), len(Tokenized_sentence)])
     for i, row_embedding in enumerate(sentence_embedded_value):
         for j, column_embedding in enumerate(sentence_embedded_value):
