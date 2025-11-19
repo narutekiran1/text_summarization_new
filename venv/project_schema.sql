@@ -1,107 +1,43 @@
--- ==========================================
--- Project Schema for Text Summarization
--- User: proj_user
--- ==========================================
+DROP TABLE IF EXISTS summaries;
+DROP TABLE IF EXISTS news_articles;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
 
--- Drop old tables (if they exist)
-DROP TABLE summaries CASCADE CONSTRAINTS;
-DROP TABLE news_articles CASCADE CONSTRAINTS;
-DROP TABLE users CASCADE CONSTRAINTS;
-DROP TABLE roles CASCADE CONSTRAINTS;
-
--- ==========================================
--- Roles Table
--- ==========================================
+-- Roles
 CREATE TABLE roles (
-    id NUMBER PRIMARY KEY,
-    role_name VARCHAR2(100) NOT NULL UNIQUE
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(100) UNIQUE NOT NULL
 );
 
-CREATE SEQUENCE roles_seq START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TRIGGER roles_trg
-BEFORE INSERT ON roles
-FOR EACH ROW
-WHEN (new.id IS NULL)
-BEGIN
-    SELECT roles_seq.NEXTVAL INTO :new.id FROM dual;
-END;
-/
-
--- ==========================================
--- Users Table
--- ==========================================
+-- Users
 CREATE TABLE users (
-    id NUMBER PRIMARY KEY,
-    username VARCHAR2(255) NOT NULL UNIQUE,
-    password VARCHAR2(255) NOT NULL,
-    role_id NUMBER NOT NULL,
-    CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id)
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id INTEGER REFERENCES roles(id)
 );
 
-CREATE SEQUENCE users_seq START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TRIGGER users_trg
-BEFORE INSERT ON users
-FOR EACH ROW
-WHEN (new.id IS NULL)
-BEGIN
-    SELECT users_seq.NEXTVAL INTO :new.id FROM dual;
-END;
-/
-
--- ==========================================
--- News Articles Table
--- ==========================================
+-- News Articles
 CREATE TABLE news_articles (
-    id NUMBER PRIMARY KEY,
-    title VARCHAR2(500) NOT NULL,
-    source VARCHAR2(255),
-    url VARCHAR2(1000),
-    language VARCHAR2(10),
-    published_date DATE DEFAULT SYSDATE
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    source VARCHAR(255),
+    url TEXT,
+    language VARCHAR(20),
+    summary TEXT,
+    published_date DATE DEFAULT CURRENT_DATE,
+    user_id INT REFERENCES users(id)
 );
 
-CREATE SEQUENCE news_articles_seq START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TRIGGER news_articles_trg
-BEFORE INSERT ON news_articles
-FOR EACH ROW
-WHEN (new.id IS NULL)
-BEGIN
-    SELECT news_articles_seq.NEXTVAL INTO :new.id FROM dual;
-END;
-/
-
--- ==========================================
--- Summaries Table
--- ==========================================
+-- Summaries
 CREATE TABLE summaries (
-    id NUMBER PRIMARY KEY,
-    user_id NUMBER NOT NULL,
-    news_id NUMBER,
-    original_text CLOB NOT NULL,
-    summarized_text CLOB NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_news FOREIGN KEY (news_id) REFERENCES news_articles(id)
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    news_id INT,
+    original_text TEXT NOT NULL,
+    summarized_text TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE SEQUENCE summaries_seq START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TRIGGER summaries_trg
-BEFORE INSERT ON summaries
-FOR EACH ROW
-WHEN (new.id IS NULL)
-BEGIN
-    SELECT summaries_seq.NEXTVAL INTO :new.id FROM dual;
-END;
-/
-
--- ==========================================
--- Insert Initial Roles
--- ==========================================
-INSERT INTO roles (role_name) VALUES ('Admin');
-INSERT INTO roles (role_name) VALUES ('User');
-
-COMMIT;
+-- Insert Roles
+INSERT INTO roles(role_name) VALUES ('Admin'), ('User');

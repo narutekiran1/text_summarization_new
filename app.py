@@ -1,57 +1,43 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file, g, jsonify, session
-import os, requests, socket
+import os, requests
 from datetime import datetime
 from gtts import gTTS
-import oracledb
+import psycopg2
+from psycopg2.extras import DictCursor
 from predict import summarize
 from preprocing import get
 
-
-
-# ===========================
-# Flask App
-# ===========================
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Required for session management
+from dotenv import load_dotenv
+load_dotenv()
 
+app.secret_key = os.getenv("SECRET_KEY")
 
-connection = oracledb.connect(
-    user="proj_user",
-    password="project123",
-    dsn="localhost:1521/XEPDB1"   # DSN goes here
-)
-# ===========================
-# Oracle DB Config
-# ===========================
-DB_USER = "proj_user"
-DB_PASSWORD = "project123"
-DB_DSN = "localhost:1521/XEPDB1"
+DB_CONFIG = {
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT")
+}
+
 
 def get_db():
-    if 'db' not in g:
-        g.db = oracledb.connect(
-            user=DB_USER,
-            password=DB_PASSWORD,
-            dsn=DB_DSN
-        )
+    if "db" not in g:
+        g.db = psycopg2.connect(**DB_CONFIG)
     return g.db
+
 
 @app.teardown_appcontext
 def close_db(e=None):
-    db = g.pop('db', None)
-    if db is not None:
-        try:
-            db.close()
-        except oracledb.InterfaceError:
-            # Ignore "not connected" error
-            pass
+    db = g.pop("db", None)
+    if db:
+        db.close()
 
 
-
-# ===========================
-# Routes
-# ===========================
-
+# ============================
+# ROUTES
+# ============================
 @app.route("/")
 def home():
     if "user" not in session:
@@ -59,13 +45,16 @@ def home():
     return render_template("Home.html")
 
 
-# -------- Fetch News API --------
+# ============================
+# FETCH NEWS
+# ============================
 @app.route("/fetch-news")
 def fetch_news():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
 
-    api_key = "pub_72436a42dfa02a50ea760fffcbce61fb0179e"
+    api_key = os.getenv("NEWS_API_KEY")
+
     lang = request.args.get("lang", "en")
     url = f"https://newsdata.io/api/1/news?apikey={api_key}&language={lang}&country=in"
 
@@ -76,12 +65,27 @@ def fetch_news():
         articles = []
         if data.get("results"):
             conn = get_db()
-            cursor = conn.cursor()
+            cur = conn.cursor(cursor_factory=DictCursor)
 
-            # Delete old records for this user to keep only latest news
-            cursor.execute("DELETE FROM news_articles WHERE user_id = :1", (session["user_id"],))
+            # count existing records
+            cur.execute("SELECT COUNT(*) FROM news_articles WHERE user_id = %s", (session["user_id"],))
+            count = cur.fetchone()[0]
 
-            for article in data["results"][:30]:  # Limit to 30
+            # delete older if > 100
+            if count > 100:
+                to_delete = count - 100
+                cur.execute("""
+                    DELETE FROM news_articles
+                    WHERE id IN (
+                        SELECT id FROM news_articles
+                        WHERE user_id = %s
+                        ORDER BY published_date ASC
+                        LIMIT %s
+                    )
+                """, (session["user_id"], to_delete))
+
+            # insert new news (max 30)
+            for article in data["results"][:30]:
                 title = article.get("title")
                 source = article.get("source_id", "Unknown")
                 link = article.get("link", "#")
@@ -91,10 +95,10 @@ def fetch_news():
                 if not title or not description:
                     continue
 
-                cursor.execute("""
-                    INSERT INTO news_articles (title, source, url, language, user_id)
-                    VALUES (:1, :2, :3, :4, :5)
-                """, (title, source, link, lang, session["user_id"]))
+                cur.execute("""
+                    INSERT INTO news_articles (title, source, url, language, summary, user_id, published_date)
+                    VALUES (%s, %s, %s, %s, %s, %s, CURRENT_DATE)
+                """, (title, source, link, lang, description, session["user_id"]))
 
                 articles.append({
                     "title": title,
@@ -105,8 +109,7 @@ def fetch_news():
                 })
 
             conn.commit()
-            cursor.close()
-            conn.close()
+            cur.close()
 
         return jsonify({"articles": articles})
 
@@ -115,9 +118,9 @@ def fetch_news():
         return jsonify({"error": str(e), "articles": []})
 
 
-
-
-# -------- Text Input --------
+# ============================
+# INPUT TEXT
+# ============================
 @app.route("/text")
 def input_text():
     if "user" not in session:
@@ -125,7 +128,9 @@ def input_text():
     return render_template("text.html")
 
 
-# -------- Summarize Output --------
+# ============================
+# OUTPUT SUMMARY
+# ============================
 @app.route("/output", methods=["POST"])
 def output():
     if "user" not in session:
@@ -133,73 +138,61 @@ def output():
 
     text = request.form.get("text")
     summary = summarize(paragraph=text)
-    output_text = ' '.join(summary)
+    output_text = " ".join(summary)
 
     conn = get_db()
-    c = conn.cursor()
-    c.execute("""
-        INSERT INTO summaries (user_id, original_text, summarized_text) 
-        VALUES (:1, :2, :3)
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO summaries (user_id, original_text, summarized_text, timestamp)
+        VALUES (%s, %s, %s, NOW())
     """, (session["user_id"], text, output_text))
-    conn.commit()
-    c.close()
 
-    # Create audio
+    conn.commit()
+    cur.close()
+
+    # audio
     audio_dir = os.path.join("static", "audio")
     os.makedirs(audio_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    audio_filename = f"output_{timestamp}.mp3"
+    audio_filename = f"output_{datetime.now().strftime('%Y%m%d%H%M%S')}.mp3"
     audio_path = os.path.join(audio_dir, audio_filename)
 
-    tts = gTTS(text=output_text, lang='en')
+    tts = gTTS(text=output_text, lang="en")
     tts.save(audio_path)
 
-    return render_template("output.html", original=text, summary=output_text, audio_file=f"audio/{audio_filename}")
+    return render_template(
+        "output.html",
+        original=text,
+        summary=output_text,
+        audio_file=f"audio/{audio_filename}"
+    )
 
 
-# -------- History --------
+# ============================
+# HISTORY
+# ============================
 @app.route("/history")
 def history():
     if "user" not in session:
         return redirect(url_for("login"))
 
     conn = get_db()
-    c = conn.cursor()
-    c.execute("""
-        SELECT original_text, summarized_text, timestamp 
-        FROM summaries 
-        WHERE user_id=:1 
+    cur = conn.cursor(cursor_factory=DictCursor)
+    cur.execute("""
+        SELECT original_text, summarized_text, timestamp
+        FROM summaries
+        WHERE user_id = %s
         ORDER BY timestamp DESC
     """, (session["user_id"],))
-    summaries = c.fetchall()
-    c.close()
+
+    summaries = cur.fetchall()
+    cur.close()
 
     return render_template("history.html", summaries=summaries)
 
 
-# -------- Generate Audio --------
-@app.route('/generate-audio', methods=['POST'])
-def generate_audio():
-    data = request.json
-    text = data.get("text", "")
-    language = data.get("language", "en")
-
-    if not text.strip():
-        return jsonify({"error": "No text provided"}), 400
-
-    try:
-        audio_dir = os.path.join("static", "audio")
-        os.makedirs(audio_dir, exist_ok=True)
-
-        tts = gTTS(text=text, lang=language)
-        audio_path = os.path.join(audio_dir, "audio.mp3")
-        tts.save(audio_path)
-        return send_file(audio_path, mimetype="audio/mp3")
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# -------- Login --------
+# ============================
+# LOGIN
+# ============================
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -208,40 +201,48 @@ def login():
         password = request.form["password"]
 
         conn = get_db()
-        c = conn.cursor()
-        c.execute("SELECT id, username FROM users WHERE username=:1 AND password=:2", (username, password))
-        user = c.fetchone()
-        c.close()
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT id, username FROM users WHERE username=%s AND password=%s
+        """, (username, password))
+
+        user = cur.fetchone()
+        cur.close()
 
         if user:
             session["user"] = user[1]
             session["user_id"] = user[0]
             return redirect(url_for("home"))
         else:
-            error = "Invalid username or password. Try again."
+            error = "Invalid username or password."
 
     return render_template("login.html", error=error)
 
 
-# -------- Signup --------
+# ============================
+# SIGNUP
+# ============================
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     error = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        role_id = 2  # default role: User
 
         conn = get_db()
-        c = conn.cursor()
+        cur = conn.cursor()
+
         try:
-            c.execute("INSERT INTO users (username, password, role_id) VALUES (:1, :2, :3)",
-                      (username, password, role_id))
+            cur.execute("""
+                INSERT INTO users (username, password, role_id)
+                VALUES (%s, %s, 2)
+            """, (username, password))
             conn.commit()
-        except oracledb.IntegrityError:
+        except Exception:
             error = "Username already exists."
         finally:
-            c.close()
+            cur.close()
 
         if not error:
             return redirect(url_for("login"))
@@ -249,16 +250,14 @@ def signup():
     return render_template("signup.html", error=error)
 
 
-# -------- Logout --------
+# ============================
+# LOGOUT
+# ============================
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
-    session.pop("user_id", None)
+    session.clear()
     return redirect(url_for("login"))
 
 
-# ===========================
-# Run App
-# ===========================
 if __name__ == "__main__":
     app.run(debug=True)

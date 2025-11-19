@@ -1,0 +1,46 @@
+# ===== PYTHON =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.log
+*.sqlite3
+
+# ===== VIRTUAL ENVIRONMENT =====
+env/
+venv/
+ENV/
+.venv/
+
+# ===== DOTENV (SECRET FILES) =====
+.env
+*.env
+
+# ===== IDE / EDITOR FILES =====
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===== OS / SYSTEM FILES =====
+.DS_Store
+Thumbs.db
+
+# ===== FLASK STATIC GENERATED FILES =====
+static/audio/*.mp3
+
+# ===== CACHE =====
+.cache/
+pip-wheel-metadata/
+__pycache__/
+
+# ===== BUILD / DIST =====
+build/
+dist/
+*.spec
+
+# ===== OTHER =====
+*.bak
+*.tmp
